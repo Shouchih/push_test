@@ -1,0 +1,17 @@
+*.swp
+*.APS
+*.ncb
+*.suo
+*.ilk
+*.pdb
+*.user
+*.cache
+*.idb
+*.aps
+*.sdf
+*.ipch
+*.opensdf
+/SentinelHaspUtility/Debug/
+/SentinelHaspUtility/Release/
+/Debug/
+/Release/
