@@ -41,6 +41,7 @@ void CDlgWriteKeyInfo::DoDataExchange(CDataExchange* pDX)
 
 BEGIN_MESSAGE_MAP(CDlgWriteKeyInfo, CDialogEx)
 	ON_BN_CLICKED(IDOK, &CDlgWriteKeyInfo::OnBnClickedOk)
+	ON_BN_CLICKED(IDC_BTN_SET_TIME_NOW, &CDlgWriteKeyInfo::OnBnClickedBtnSetTimeNow)
 END_MESSAGE_MAP()
 
 
@@ -61,6 +62,11 @@ BOOL CDlgWriteKeyInfo::OnInitDialog()
 	}else{
 		m_UUID=msg;
 	}
+
+	m_ExpireDate.SetDate(
+		m_ExpireDate.GetYear()+1,
+		m_ExpireDate.GetMonth(),
+		m_ExpireDate.GetDay());
 
 	UpdateData(FALSE);
 
@@ -117,4 +123,14 @@ void CDlgWriteKeyInfo::transferOleDateToHaspKeyTime (COleDateTime oleDateTime ,H
 	haspkeyTime.hour=oleDateTime.GetHour();
 	haspkeyTime.minute=oleDateTime.GetMinute();
 	haspkeyTime.second=oleDateTime.GetSecond();
+}
+
+void CDlgWriteKeyInfo::OnBnClickedBtnSetTimeNow()
+{
+	// TODO: Add your control notification handler code here
+	UpdateData(TRUE);
+
+	m_ExpireDate=COleDateTime::GetCurrentTime();
+
+	UpdateData(FALSE);
 }

@@ -186,7 +186,7 @@ void CSentinelHaspUtilityView::haspReadKeyData(void){
 	SYSTEMTIME expireDate;
 	BOOL checkFlag;
 	int videoSum;
-	char aes_key[16];
+	char aes_key[17];
 
 	if(hasp_key_read_data(msg,uuid,lib_apc_key,expireDate, checkFlag,videoSum,aes_key)){
 

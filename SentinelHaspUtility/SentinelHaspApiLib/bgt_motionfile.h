@@ -24,10 +24,11 @@ struct bgt_motion_file_header {
     char video_name[256];           // end with \0
 	char project_id[32];
 	uint16_t effect[4];                     // 0:no-use, 6:water,7:scent, 8:wind,9:fog,10:snow,11:leg_tickle
-    char updateDate[16];              // date to save
+    char updateDate[16];              // date to save , yyyy-mm-dd hh:mm
 	char guid[36];                           //  guid code, same as origent source data
 	char sysUUID[37];                   //  mother board UUID + '\0'  
-    unsigned char reserved[55];    // must be \0
+	char expireDate[11];               //  date to save , yyyy-mm-dd  + '\0'  
+    unsigned char reserved[44];    // must be \0
 };
 
 struct bgt_cue_file_header{
@@ -44,7 +45,8 @@ struct bgt_cue_file_header{
 	char updateDate[16];					// date to save
 	char guid[36];									//  guid code, same as origent source data
 	char sysUUID[37];                         //  mother board UUID + '\0'  
-    unsigned char reserved[63];        // must be \0
+	char expireDate[11];                     //  date to save  , yyyy-mm-dd  + '\0'  
+    unsigned char reserved[52];        // must be \0
  };
 
 // 0: success

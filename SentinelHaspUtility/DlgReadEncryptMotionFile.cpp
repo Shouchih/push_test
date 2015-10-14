@@ -58,7 +58,6 @@ BOOL CDlgReadEncryptMotionFile::OnInitDialog()
 		m_SysUUID=msg;
 	}
 
-
 	m_CylinderDataListBox.SetExtendedStyle( m_CylinderDataListBox.GetExtendedStyle() | LVS_EX_GRIDLINES | LVS_EX_FULLROWSELECT | LVS_EX_FLATSB | LVS_EX_TRACKSELECT );
 
 	m_EffectDataListBox.SetExtendedStyle( m_EffectDataListBox.GetExtendedStyle() | LVS_EX_GRIDLINES | LVS_EX_FULLROWSELECT | LVS_EX_FLATSB | LVS_EX_TRACKSELECT );
@@ -158,7 +157,7 @@ BOOL CDlgReadEncryptMotionFile::openDecryptMotionFile(CString fileName){
 		fb.Close();
 
 		char msg[32];
-
+		//-------------------------  ∏—ΩX  --------------------------------
 		if(hasp_key_decrypt_data(msg,m_Buffer,m_BufferSize)==FALSE){
 			CString temp;
 			temp.Format("Decrypt data error : %s",msg);
@@ -176,7 +175,12 @@ BOOL CDlgReadEncryptMotionFile::openDecryptMotionFile(CString fileName){
 			CString temp;
 			temp.Format("UUID verfy error : %s",msg);
 			MessageBox (temp);
-			return FALSE;
+		}	
+		//   -----------  ¿À¨d Expire Date ------------------------------------------------
+		if(checkMotionExpireDate(msg,m_Buffer)==FALSE){
+			CString temp;
+			temp.Format("Expire Date error : %s",msg);
+			MessageBox (temp);
 		}	
 
 	}CATCH(CException,e){
@@ -401,7 +405,10 @@ void CDlgReadEncryptMotionFile::showMotionHeaderInfo(void)
 
 	nIndex =m_ListCtrlHeaderInfo.InsertItem( 0xFFFF,"Update Date");
 	temp.Format("%.16s",m_MotionFileHeader.updateDate);
-	
+	m_ListCtrlHeaderInfo.SetItemText( nIndex, 1,temp);
+
+	nIndex =m_ListCtrlHeaderInfo.InsertItem( 0xFFFF,"Expire Date");
+	temp.Format("%.10s",m_MotionFileHeader.expireDate);
 	m_ListCtrlHeaderInfo.SetItemText( nIndex, 1,temp);
 
 	nIndex =m_ListCtrlHeaderInfo.InsertItem( 0xFFFF,"GUID");
@@ -493,6 +500,10 @@ void CDlgReadEncryptMotionFile::showCueHeaderInfo(void)
 
 	nIndex =m_ListCtrlHeaderInfo.InsertItem( 0xFFFF,"Update Date");
 	temp.Format("%.16s",m_CueFileHeader.updateDate);
+
+	nIndex =m_ListCtrlHeaderInfo.InsertItem( 0xFFFF,"Expire Date");
+	temp.Format("%.10s",m_CueFileHeader.expireDate);
+	m_ListCtrlHeaderInfo.SetItemText( nIndex, 1,temp);
 	
 	m_ListCtrlHeaderInfo.SetItemText( nIndex, 1,temp);
 

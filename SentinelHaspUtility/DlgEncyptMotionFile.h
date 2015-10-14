@@ -3,6 +3,7 @@
 
 #include "polarssl\sha1.h"
 #include "SentinelHaspApiLib\bgt_motionfile.h"
+#include "atlcomtime.h"
 
 // CDlgEncyptMotionFile dialog
 
@@ -39,4 +40,6 @@ public:
 	int m_FileVersion;
 
 	bool saveMotionBufferToFile( char  *filePath,unsigned char *buffer,int bufferSize,char *msg);
+	COleDateTime m_ExpireDate;
+	afx_msg void OnBnClickedBtnSetTimeNow();
 };

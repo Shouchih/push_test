@@ -48,12 +48,12 @@ BOOL hasp_key_login(char *msg){
 			break;
 		}
 
-		return false;
+		return FALSE;
 
 	}else{
 		//msg="SUCCESS";
 		stringCopy(msg,"SUCCESS",32);
-		return true;
+		return TRUE;
 	}
 }
 
@@ -73,10 +73,10 @@ BOOL hasp_key_logout(char *msg){
 			stringCopy(msg,"HASP_STATUS_NOT_READY",32);
 			break;
 		}
-		return false;
+		return FALSE;
 	}else{
 		stringCopy(msg,"SUCCESS",32);
-		return true;
+		return TRUE;
 	}
 
 }
@@ -100,7 +100,7 @@ BOOL hasp_key_real_time(char *msg,struct HaspKeyTime &haspTime){
 			stringCopy(msg,"HASP_STATUS_NOT_READY",32);
 			break;
 		}
-		return false;
+		return FALSE;
 	}else{
 
 		m_hasp_status = hasp_hasptime_to_datetime(m_hasp_time, 
@@ -115,7 +115,7 @@ BOOL hasp_key_real_time(char *msg,struct HaspKeyTime &haspTime){
 		{
 			/* handle error */
 			stringCopy(msg,"HASP_INV_TIME",32);
-			return false;
+			return FALSE;
 		}else{
 			stringCopy(msg,"SUCCESS",32);
 
@@ -124,7 +124,7 @@ BOOL hasp_key_real_time(char *msg,struct HaspKeyTime &haspTime){
 
 			haspTime.hour-=(int)(timeZoneInfo.Bias/60);
 
-			return true;
+			return TRUE;
 		}
 
 	}
@@ -151,7 +151,7 @@ BOOL hasp_key_write_data(char *msg,char *uuid,char * lib_apc_key,struct HaspKeyT
 
 	//  Just date data , no motion 
 	if(!hasp_key_encrypt_data(msg,haspKeyData,len)){
-		return false;
+		return FALSE;
 	}
 
 	m_hasp_status = hasp_write(m_hasp_handle, HASP_FILEID_RW, offset, len, haspKeyData);
@@ -177,10 +177,10 @@ BOOL hasp_key_write_data(char *msg,char *uuid,char * lib_apc_key,struct HaspKeyT
 			stringCopy(msg,"HASP_STATUS_NOT_READY",32);
 			break;
 		}
-		return false;
+		return FALSE;
 	}else{
 		stringCopy(msg,"SUCCESS",32);
-		return true;
+		return TRUE;
 	}
 
 }
@@ -190,7 +190,7 @@ BOOL hasp_key_write_check_flag(char *msg,BOOL checkFlag){
 
 //	if(m_hasp_handle==NULL){
 		if(!hasp_key_login(msg)){
-			return false;
+			return FALSE;
 		}
 //	}
 
@@ -223,17 +223,17 @@ BOOL hasp_key_write_check_flag(char *msg,BOOL checkFlag){
 			stringCopy(msg,"HASP_STATUS_NOT_READY",32);
 			break;
 		}
-		return false;
+		return FALSE;
 	}else{
 
 		if(!hasp_key_decrypt_data(msg,haspKeyData, len)){
-			return false;
+			return FALSE;
 		}
 
 		haspKeyData->checkFlag=checkFlag;
 
 		if(!hasp_key_encrypt_data(msg,haspKeyData,len)){
-			return false;
+			return FALSE;
 		}
 
 		m_hasp_status = hasp_write(m_hasp_handle, HASP_FILEID_RW, offset, len, haspKeyData);
@@ -259,10 +259,10 @@ BOOL hasp_key_write_check_flag(char *msg,BOOL checkFlag){
 				stringCopy(msg,"HASP_STATUS_NOT_READY",32);
 				break;
 			}
-			return false;
+			return FALSE;
 		}else{
 			stringCopy(msg,"SUCCESS",32);
-			return true;
+			return TRUE;
 		}
 
 	}
@@ -273,7 +273,7 @@ BOOL hasp_key_read_check_flag(char *msg,BOOL &checkFlag){
 
 	//if(m_hasp_handle==NULL){
 	if(!hasp_key_login(msg)){
-		return false;
+		return FALSE;
 	}
 	//}
 
@@ -306,17 +306,17 @@ BOOL hasp_key_read_check_flag(char *msg,BOOL &checkFlag){
 			stringCopy(msg,"HASP_STATUS_NOT_READY",32);
 			break;
 		}
-		return false;
+		return FALSE;
 	}else{
 
 		if(!hasp_key_decrypt_data(msg,haspKeyData, len)){
-			return false;
+			return FALSE;
 		}
 
 		checkFlag=haspKeyData->checkFlag;
 
 		stringCopy(msg,"SUCCESS",32);
-		return true;
+		return TRUE;
 
 	}
 }
@@ -352,11 +352,11 @@ BOOL hasp_key_read_data(char *msg,char *uuid,char * lib_apc_key,SYSTEMTIME & exp
 			stringCopy(msg,"HASP_STATUS_NOT_READY",32);
 			break;
 		}
-		return false;
+		return FALSE;
 	}else{
 
 		if(!hasp_key_decrypt_data(msg,haspKeyData, len)){
-			return false;
+			return FALSE;
 		}
 		
 		char magic[11];
@@ -364,7 +364,7 @@ BOOL hasp_key_read_data(char *msg,char *uuid,char * lib_apc_key,SYSTEMTIME & exp
 
 		if(strcmp(magic,"@Brogent00")!=0){
 			stringCopy(msg,"HASP_MAGIC_ERROR",32);
-			return false;
+			return FALSE;
 		}
 
 		stringCopy(uuid, haspKeyData->UUID,80);
@@ -373,9 +373,44 @@ BOOL hasp_key_read_data(char *msg,char *uuid,char * lib_apc_key,SYSTEMTIME & exp
 		checkFlag=haspKeyData->checkFlag;
 		videoSum=haspKeyData->videoSum;
 		stringCopy(aes_key,haspKeyData->AES_KEY,16);
-	
+
+		//  ------- 檢查 UUID  of  KEY  -----------
+		char sysUUID[37];
+		if(getSysUUID(msg,sysUUID)==FALSE){
+			return FALSE;
+		}
+		if(memcmp(uuid,sysUUID,36)==0){
+			stringCopy(msg,"SUCCESS.",32);
+		}else{
+			stringCopy(msg,"UUID Error.",32);
+			return FALSE;
+		}
+		//  ------- 檢查 UUID  of  KEY  -----------
+
+		//  ------- 檢查 KEY 是否過期  ----------------
+		HaspKeyTime haspTime;
+		SYSTEMTIME systemTime;
+
+		if(!hasp_key_real_time(msg,haspTime)){
+			return FALSE;
+		}
+		systemTime=transToSystemTime(haspTime);
+
+		double expireTimeSeries;
+		SystemTimeToVariantTimeWithMilliseconds (expireDate, &expireTimeSeries);
+
+		double systemTimeSeries;
+		SystemTimeToVariantTimeWithMilliseconds (systemTime, &systemTimeSeries);
+
+		if(systemTimeSeries>expireTimeSeries){
+			stringCopy(msg,"KEY DATE EXPIRE !.",32);
+			return FALSE;
+		}
+		//  ------- 檢查 KEY 是否過期  ----------------
+
+
 		stringCopy(msg,"SUCCESS",32);
-		return true;
+		return TRUE;
 	}
 
 }
@@ -405,10 +440,10 @@ BOOL hasp_key_encrypt_data(char *msg,void *buffer,hasp_size_t len){
 			stringCopy(msg,"HASP_STATUS_NOT_READY",32);
 			break;
 		}
-		return false;
+		return FALSE;
 	}else{
 		stringCopy(msg,"SUCCESS",32);
-		return true;
+		return TRUE;
 	}
 }
 
@@ -437,10 +472,10 @@ BOOL hasp_key_decrypt_data(char *msg,void *buffer,hasp_size_t len){
 			stringCopy(msg,"HASP_STATUS_NOT_READY",32);
 			break;
 		}
-		return false;
+		return FALSE;
 	}else{
 		stringCopy(msg,"SUCCESS",32);
-		return true;
+		return TRUE;
 	}
 
 }
@@ -449,28 +484,27 @@ BOOL hasp_key_decrypt_data(char *msg,void *buffer,hasp_size_t len){
 BOOL hasp_key_check(char *msg){
 	
 	if(!hasp_key_login(msg)){
-		return false;
+		return FALSE;
 	}
-	
 
 	HaspKeyTime haspTime;
 	if(!hasp_key_real_time(msg,haspTime)){
-		return false;
+		return FALSE;
 	}
 	
 	char uuid[80];
 	char lib_apc_key[32];
 	SYSTEMTIME expireDate;
-	BOOL checkFlag=false;
+	BOOL checkFlag=FALSE;
 	int videoSum;
-	char aes_key[16];
+	char aes_key[17];
 
 	if(!hasp_key_read_data(msg,uuid,lib_apc_key,expireDate, checkFlag,videoSum,aes_key)){
-		return false;
+		return FALSE;
 	}
 	
 	stringCopy(msg,"SUCCESS",32);
-	return true;
+	return TRUE;
 
 }
 
@@ -478,12 +512,12 @@ BOOL get_hasp_key_real_time(char *msg,SYSTEMTIME & systemTime){
 
 	HaspKeyTime haspTime;
 	if(!hasp_key_real_time(msg,haspTime)){
-		return false;
+		return FALSE;
 	}
 
 	systemTime=transToSystemTime(haspTime);
 
-	return  true;
+	return  TRUE;
 
 }
 
@@ -583,7 +617,7 @@ BOOL hasp_key_write_video_sum(char *msg,int videoSum){
 
 	if(!m_hasp_handle){
 		if(!hasp_key_login(msg)){
-			return false;
+			return FALSE;
 		}
 	}
 
@@ -616,17 +650,17 @@ BOOL hasp_key_write_video_sum(char *msg,int videoSum){
 			stringCopy(msg,"HASP_STATUS_NOT_READY",32);
 			break;
 		}
-		return false;
+		return FALSE;
 	}else{
 
 		if(!hasp_key_decrypt_data(msg,haspKeyData, len)){
-			return false;
+			return FALSE;
 		}
 
 		haspKeyData->videoSum=videoSum;
 
 		if(!hasp_key_encrypt_data(msg,haspKeyData,len)){
-			return false;
+			return FALSE;
 		}
 
 		m_hasp_status = hasp_write(m_hasp_handle, HASP_FILEID_RW, offset, len, haspKeyData);
@@ -652,10 +686,10 @@ BOOL hasp_key_write_video_sum(char *msg,int videoSum){
 				stringCopy(msg,"HASP_STATUS_NOT_READY",32);
 				break;
 			}
-			return false;
+			return FALSE;
 		}else{
 			stringCopy(msg,"SUCCESS",32);
-			return true;
+			return TRUE;
 		}
 
 	}
@@ -667,7 +701,7 @@ BOOL hasp_key_read_video_sum(char *msg,int &videoSum){
 
 //	if(m_hasp_handle==NULL){
 		if(!hasp_key_login(msg)){
-			return false;
+			return FALSE;
 		}
 //	}
 
@@ -700,11 +734,11 @@ BOOL hasp_key_read_video_sum(char *msg,int &videoSum){
 			stringCopy(msg,"HASP_STATUS_NOT_READY",32);
 			break;
 		}
-		return false;
+		return FALSE;
 	}else{
 
 		if(!hasp_key_decrypt_data(msg,haspKeyData, len)){
-			return false;
+			return FALSE;
 		}
 
 		videoSum=haspKeyData->videoSum;
@@ -796,5 +830,100 @@ BOOL checkUUID(char *msg, unsigned char *buffer){
 
 	stringCopy(msg,"File Ver unkown.",32);
 	return FALSE;
+
+}
+
+BOOL checkMotionExpireDate(char *msg,  unsigned char *buffer){
+
+	// ---  get HaspKey Time ----------------------------------
+	HaspKeyTime haspTime;
+	SYSTEMTIME systemTime;
+
+	if(!hasp_key_real_time(msg,haspTime)){
+		return FALSE;
+	}
+	systemTime=transToSystemTime(haspTime);
+
+	// ---  get Expire Date of Motion header  -----------------------			
+	struct bgt_motion_file_header motionFileHeader;
+	memcpy(&motionFileHeader,buffer, sizeof(bgt_motion_file_header));
+
+	//  ---- for  motion file header ver 2 -----
+	if(motionFileHeader.file_ver==2){
+
+		if(checkDate(motionFileHeader.expireDate, systemTime)==TRUE){
+			stringCopy(msg,"SUCCESS.",32);
+			return TRUE;
+		}else{
+			stringCopy(msg,"DATE EXPIRE !.",32);
+			return FALSE;
+		}
+
+		//  ---- for  cue file header ver 3 -----
+	}else if(motionFileHeader.file_ver==3){
+		struct bgt_cue_file_header cueFileHeader;
+		memcpy(&cueFileHeader,buffer, sizeof(bgt_cue_file_header));
+
+		if(checkDate(cueFileHeader.expireDate, systemTime)==TRUE){
+			stringCopy(msg,"SUCCESS.",32);
+			return TRUE;
+		}else{
+			stringCopy(msg,"DATE EXPIRE !.",32);
+			return FALSE;
+		}
+	}
+
+	stringCopy(msg,"File Ver unkown.",32);
+	return FALSE;
+
+
+}
+
+
+//  private use only
+//  dateString is yyyy-mm-dd
+//  if dateString < timeNow     return FALSE
+//  if dateString > timeNow     return TRUE
+BOOL checkDate(char *dateString, SYSTEMTIME timeNow){
+
+	//  parse dateString
+	char temp[10];
+	int year=0;
+	int month=0;
+	int day=0;
+	memcpy(temp,dateString, 4);
+	temp[4]='\0';
+	year=atoi(temp);
+
+	memcpy(temp,dateString+5, 2);
+	temp[2]='\0';
+	month=atoi(temp);
+
+	memcpy(temp,dateString+8, 2);
+	temp[2]='\0';
+	day=atoi(temp);
+
+	//  -------------- transfer to SYSTEMTIME time -------------------
+	SYSTEMTIME time ;
+
+	time.wYear=year;
+	time.wMonth=month;
+	time.wDay=day;
+	time.wHour=0;
+	time.wMinute=0;
+	time.wSecond=0;
+	time.wMilliseconds=0;
+
+	double dVariantTime;
+	SystemTimeToVariantTimeWithMilliseconds (time, &dVariantTime);
+
+	double dVariantTimeNow;
+	SystemTimeToVariantTimeWithMilliseconds (timeNow, &dVariantTimeNow);
+
+	if(dVariantTime<dVariantTimeNow){
+		return FALSE;
+	}else{
+		return TRUE;
+	}
 
 }

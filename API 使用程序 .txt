@@ -1,0 +1,176 @@
+編譯環境 :
+
+all file use 
+put at path \SentinelHaspApiLib 
+            \polarssl
+
+at project properties
+
+-->Linker
+-->Input
+-->Additional Dependencies
+
+--> add:
+
+SentinelHaspApiLib/libhasp_windows_103339.lib   --- 32 位元版
+or
+SentinelHaspApiLib/libhasp_windows_x64_103339.lib    ---  64 位元版
+
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+基本檢查程序 -- 不需初始程序,可直接使用於任何地方:
+
+#include "SentinelHaspApiLib\haspUtil.h"
+
+//檢查保護鎖所有項目
+char msg[32];   // 用來回傳結果訊息,正確為 SUCCESS
+if(!hasp_key_check(msg)){
+   do something ……
+}
+
+基本檢查程序,主要檢查 USB 鎖是否存在,過期,UUID是否與電腦相符
+------------------------------------------------------------------------
+
+如果各員有其它需求,可以各別使用其它功能 , 可參閱 haspUtil.h
+
+例如 :
+// 讀取保護鎖內的時間
+char msg[32];           //  用來傳回錯誤訊息
+SYSTEMTIME systemTime;
+if(get_hasp_key_real_time(msg,systemTime)){
+    TRUE.........
+}
+
+// 讀取保護鎖內的資料
+char uuid[80];
+char lib_apc_key[32];
+SYSTEMTIME expireDate;
+BOOL checkFlag=FALSE;
+int videoSum;
+char aes_key[17];
+char msg[32];
+if(!hasp_key_read_data(msg,uuid,lib_apc_key,expireDate, checkFlag,videoSum,aes_key)){
+   FALSE................
+}
+
+-------------------------------------------------------------------------------------------------
+讀取加密過的 motion 檔
+
+a.開啟檔案,將檔案內容全部讀取存入 m_Buffer
+
+b.使用 USB 保護鎖 api 將 m_Buffer 內的亂碼復原
+hasp_key_decrypt_data(msg,m_Buffer,m_BufferSize);
+
+c.檢查相關資料
+
+如果一切 OK , 後續 m_Buffer 內的 motion  資料可自行運用
+
+範例
+//--------  讀取檔案內容 , 解碼 --------------------
+// 完整 Code 參閱 CDlgReadEncryptMotionFile.cpp
+unsigned char *m_Buffer ;
+BOOL openDecryptMotionFile(CString fileName){
+
+	CFile fb;
+	TRY{
+
+		CFileException fileException;
+		BOOL result=FALSE;
+
+		result=fb.Open(fileName,CFile::modeRead | CFile::typeBinary,&fileException);
+		if (!result) {
+			CString msg;
+			TCHAR szError[1024];
+			fileException.GetErrorMessage(szError, 1024); 
+			msg.Format("Error opening file : %s",szError);
+			MessageBox (msg);
+			fb.Close();
+			return FALSE;
+		}
+
+		m_BufferSize=(int)fb.GetLength();
+
+		if(m_BufferSize<sizeof(bgt_motion_file_header)){
+			MessageBox ("Motion file too small .");
+			fb.Close();
+			return FALSE;
+		}
+
+		m_Buffer = (unsigned char*)malloc(m_BufferSize); 
+		fb.Read  (m_Buffer , m_BufferSize);	
+		fb.Close();
+
+		char msg[32];
+
+                //----------------  解碼  -----------------------------
+		if(hasp_key_decrypt_data(msg,m_Buffer,m_BufferSize)==FALSE){
+			CString temp;
+			temp.Format("Decrypt data error : %s",msg);
+			MessageBox (temp);
+			fb.Close();
+			return FALSE;
+		}
+
+		//  ------------  取得檔案版本 ------------------------------------------------
+		memcpy(&m_MotionFileHeader,m_Buffer, sizeof(bgt_motion_file_header));
+		m_FileVersion=m_MotionFileHeader.file_ver;
+
+		//  ------------  檢查 UUID ------------------------------------------------
+		if(checkUUID(msg,m_Buffer)==FALSE){
+			CString temp;
+			temp.Format("UUID verfy error : %s",msg);
+			MessageBox (temp);
+		}	
+		//   -----------  檢查 Expire Date ------------------------------------------------
+		if(checkMotionExpireDate(msg,m_Buffer)==FALSE){
+			CString temp;
+			temp.Format("Expire Date error : %s",msg);
+			MessageBox (temp);
+		}	
+
+	}CATCH(CException,e){
+		CString sMessage=_T("");
+		TCHAR   szCause[255];
+		e->GetErrorMessage(  szCause,255,NULL);
+		sMessage.Format(_T("At CDlgShowOtherMotionFile::verifyMotionFileHeader ,exception = \"%s\"."),szCause);
+		MessageBox(sMessage);
+		fb.Close();
+		return FALSE;
+		//e->ReportError();
+	}
+	END_CATCH
+
+	return TRUE;
+}
+
+
+
+
+
+----------------------------------------------------------------------------------------------
+其它注意事項 :
+
+a.motion 表頭改版 :
+bgt_motionfile.h 內的表頭加入一個 UUID 欄位,以及 ExpireDate 
+表頭 Size 與原來版本相同 , 可直接將舊版換掉 , 不影響原本的功能
+
+b.
+在 WmiInfo.cpp 內
+在取得 UUID 時要 init com 元件 , 
+此部分是 子星 寫的 
+
+原先子星是使用 
+    m_hres =CoInitializeEx(0, COINIT_MULTITHREADED)  
+
+在我的環境會失敗 , 所以改成
+  m_hres =  CoInitialize(0); 
+
+如果你的執行環境如果有問題 , 可改回子星原本的寫法
+
+c.表頭有一些 include , 如 log.h 等 , 是我測試使用的,可直接移除
+
+
+
+
+
+

@@ -30,4 +30,5 @@ public:
 	BOOL m_CheckOK;
 	int m_VideoSum;
 	CString m_AESKey;
+	afx_msg void OnBnClickedBtnSetTimeNow();
 };

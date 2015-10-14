@@ -86,4 +86,6 @@ BOOL VariantTimeToSystemTimeWithMilliseconds (/*input*/ double dVariantTime, /*o
 BOOL getSysUUID(char *msg,char uuid[37]);
 BOOL checkUUID(char *msg, unsigned char *buffer);
 
+BOOL checkMotionExpireDate(char *msg, unsigned char *buffer);
 
+BOOL checkDate(char *dateString, SYSTEMTIME timeNow);

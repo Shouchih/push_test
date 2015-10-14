@@ -18,6 +18,7 @@ CDlgEncyptMotionFile::CDlgEncyptMotionFile(CWnd* pParent /*=NULL*/)
 	, m_EncryptMotionFilePath(_T(""))
 	, m_FolderPath(_T(""))
 	, m_MotionFileName(_T(""))
+	, m_ExpireDate(COleDateTime::GetCurrentTime())
 {
 
 }
@@ -32,12 +33,14 @@ void CDlgEncyptMotionFile::DoDataExchange(CDataExchange* pDX)
 	DDX_Text(pDX, IDC_EDIT_SYS_UUID, m_SysUUID);
 	DDX_Text(pDX, IDC_EDIT1, m_MotionFilePath);
 	DDX_Text(pDX, IDC_EDIT2, m_EncryptMotionFilePath);
+	DDX_DateTimeCtrl(pDX, IDC_DATETIMEPICKER_EXPIRE_DATE, m_ExpireDate);
 }
 
 
 BEGIN_MESSAGE_MAP(CDlgEncyptMotionFile, CDialogEx)
 	ON_BN_CLICKED(IDC_BTN_BROWSE_MOTION_FILE, &CDlgEncyptMotionFile::OnBnClickedBtnBrowseMotionFile)
 	ON_BN_CLICKED(IDC_BTN_START_ENCRYPT_MOTION_FILE, &CDlgEncyptMotionFile::OnBnClickedBtnStartEncryptMotionFile)
+	ON_BN_CLICKED(IDC_BTN_SET_TIME_NOW, &CDlgEncyptMotionFile::OnBnClickedBtnSetTimeNow)
 END_MESSAGE_MAP()
 
 
@@ -59,6 +62,11 @@ BOOL CDlgEncyptMotionFile::OnInitDialog()
 	}else{
 		m_SysUUID=msg;
 	}
+
+	m_ExpireDate.SetDate(
+		m_ExpireDate.GetYear()+1,
+		m_ExpireDate.GetMonth(),
+		m_ExpireDate.GetDay());
 
 	UpdateData(FALSE);
 	
@@ -224,7 +232,15 @@ int CDlgEncyptMotionFile::encryptMotionFileHeader(CString sourceFileName,CString
 		// --------- Write Sys UUID -------------------------------------------------
 		memcpy(m_MotionFileHeader.sysUUID,m_SysUUID.GetBuffer(),36);
 		m_MotionFileHeader.sysUUID[36]='\0';
+
+		// ---------- Write Expire Date ----------------------------------------------------
+		CString strDateTime;
+		strDateTime.Format("%4d-%.2d-%.2d",m_ExpireDate.GetYear(),m_ExpireDate.GetMonth(),m_ExpireDate.GetDay());
+		stringCopy( m_MotionFileHeader.expireDate,strDateTime.GetBuffer(),sizeof(m_MotionFileHeader.expireDate));
+		m_MotionFileHeader.expireDate[10]='\0';
+		//-----------------------------------------------------------------------------------------------------------------------------
 		memcpy(buffer, &m_MotionFileHeader, sizeof(bgt_motion_file_header));
+	
 
 		// ---------  因為 Header 的內容已經變更 , 需重新產生 SHA1驗證碼  -----------------------------------------
 	    sha1_result=0;
@@ -444,3 +460,14 @@ bool CDlgEncyptMotionFile::saveMotionBufferToFile( char  *filePath,unsigned char
 		END_CATCH
 
 	}
+
+
+void CDlgEncyptMotionFile::OnBnClickedBtnSetTimeNow()
+{
+	// TODO: Add your control notification handler code here
+	UpdateData(TRUE);
+
+	m_ExpireDate=COleDateTime::GetCurrentTime();
+
+	UpdateData(FALSE);
+}

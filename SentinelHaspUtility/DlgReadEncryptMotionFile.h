@@ -64,4 +64,5 @@ public:
 
 	void showMotionData(vector<struct signal> &motionDataList);
 	void showEffectData(vector<int> *effectDataList,int effectTypeNumber);
+
 };
