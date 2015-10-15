@@ -4,6 +4,7 @@
 #include "polarssl\sha1.h"
 #include "SentinelHaspApiLib\bgt_motionfile.h"
 #include "atlcomtime.h"
+#include "SentinelHaspUtilityDoc.h"
 
 // CDlgEncyptMotionFile dialog
 
@@ -42,4 +43,9 @@ public:
 	bool saveMotionBufferToFile( char  *filePath,unsigned char *buffer,int bufferSize,char *msg);
 	COleDateTime m_ExpireDate;
 	afx_msg void OnBnClickedBtnSetTimeNow();
+
+	CSentinelHaspUtilityDoc *m_pSentinelHaspUtilityDoc;
+	void updateConfigParam();
+	void transferOleDateToHaspKeyTime (COleDateTime oleDateTime ,HaspKeyTime & haspkeyTime);
+	afx_msg void OnBnClickedBtnReNewUuid();
 };

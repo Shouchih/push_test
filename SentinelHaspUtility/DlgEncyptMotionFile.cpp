@@ -6,6 +6,7 @@
 #include "DlgEncyptMotionFile.h"
 #include "afxdialogex.h"
 #include "SentinelHaspApiLib\haspUtil.h"
+#include "DlgSaveConfigParam.h"
 
 // CDlgEncyptMotionFile dialog
 
@@ -41,6 +42,7 @@ BEGIN_MESSAGE_MAP(CDlgEncyptMotionFile, CDialogEx)
 	ON_BN_CLICKED(IDC_BTN_BROWSE_MOTION_FILE, &CDlgEncyptMotionFile::OnBnClickedBtnBrowseMotionFile)
 	ON_BN_CLICKED(IDC_BTN_START_ENCRYPT_MOTION_FILE, &CDlgEncyptMotionFile::OnBnClickedBtnStartEncryptMotionFile)
 	ON_BN_CLICKED(IDC_BTN_SET_TIME_NOW, &CDlgEncyptMotionFile::OnBnClickedBtnSetTimeNow)
+	ON_BN_CLICKED(IDC_BTN_RE_NEW_UUID, &CDlgEncyptMotionFile::OnBnClickedBtnReNewUuid)
 END_MESSAGE_MAP()
 
 
@@ -52,21 +54,15 @@ BOOL CDlgEncyptMotionFile::OnInitDialog()
 	CDialogEx::OnInitDialog();
 
 	// TODO:  Add extra initialization here
-	char msg[32];
-	char uuid[37];
+	CFrameWnd * pFrame = (CFrameWnd *)(AfxGetApp()->m_pMainWnd);
+	m_pSentinelHaspUtilityDoc=(CSentinelHaspUtilityDoc*)pFrame->GetActiveDocument();
 
-	UpdateData(TRUE);
-
-	if(getSysUUID(msg,uuid)==TRUE){
-		m_SysUUID=uuid;
-	}else{
-		m_SysUUID=msg;
-	}
+	m_SysUUID=m_pSentinelHaspUtilityDoc->m_ConfigParam.UUID;
 
 	m_ExpireDate.SetDate(
-		m_ExpireDate.GetYear()+1,
-		m_ExpireDate.GetMonth(),
-		m_ExpireDate.GetDay());
+		m_pSentinelHaspUtilityDoc->m_ConfigParam.keyExpireDate.year,
+		m_pSentinelHaspUtilityDoc->m_ConfigParam.keyExpireDate.month,
+		m_pSentinelHaspUtilityDoc->m_ConfigParam.keyExpireDate.day);
 
 	UpdateData(FALSE);
 	
@@ -158,8 +154,9 @@ void CDlgEncyptMotionFile::OnBnClickedBtnStartEncryptMotionFile()
 	}
 
 	wait.Restore();
-
 	MessageBox(msg);
+
+	updateConfigParam();
 }
 
 int CDlgEncyptMotionFile::encryptMotionFileHeader(CString sourceFileName,CString encryptFileName,char *msg)
@@ -370,6 +367,14 @@ int CDlgEncyptMotionFile::encryptCueFileHeader(CString sourceFileName,CString en
 		// --------- Write Sys UUID -------------------------------------------------
 		memcpy(m_CueFileHeader.sysUUID,m_SysUUID.GetBuffer(),36);
 		m_CueFileHeader.sysUUID[36]='\0';
+
+		// ---------- Write Expire Date ----------------------------------------------------
+		CString strDateTime;
+		strDateTime.Format("%4d-%.2d-%.2d",m_ExpireDate.GetYear(),m_ExpireDate.GetMonth(),m_ExpireDate.GetDay());
+		stringCopy( m_CueFileHeader.expireDate,strDateTime.GetBuffer(),sizeof(m_CueFileHeader.expireDate));
+		m_MotionFileHeader.expireDate[10]='\0';
+		//-----------------------------------------------------------------------------------------------------------------------------
+
 		memcpy(buffer, &m_CueFileHeader, sizeof(bgt_cue_file_header));
 
 	    // ---------  因為 Header 的內容已經變更 , 需重新產生 SHA1驗證碼  -----------------------------------------
@@ -421,6 +426,44 @@ int CDlgEncyptMotionFile::encryptCueFileHeader(CString sourceFileName,CString en
 
 }
 
+void CDlgEncyptMotionFile::updateConfigParam(){
+
+	UpdateData(TRUE);
+
+	HaspKeyTime expireDate;
+	transferOleDateToHaspKeyTime (m_ExpireDate ,expireDate);
+
+	expireDate.hour=23;
+	expireDate.minute=59;
+	expireDate.second=59;
+    
+	stringCopy((char *)m_pSentinelHaspUtilityDoc->m_ConfigParam.UUID,
+	                      m_SysUUID.GetBuffer(),
+						  sizeof(m_pSentinelHaspUtilityDoc->m_ConfigParam.UUID));
+
+	m_pSentinelHaspUtilityDoc->m_ConfigParam.keyExpireDate=expireDate;
+
+	
+	CDlgSaveConfigParam dlgSaveConfigParam;
+
+	if(dlgSaveConfigParam.DoModal()==IDOK){
+		
+	}
+
+	UpdateData(FALSE);
+
+}
+
+void CDlgEncyptMotionFile::transferOleDateToHaspKeyTime (COleDateTime oleDateTime ,HaspKeyTime & haspkeyTime){
+
+	haspkeyTime.year=oleDateTime.GetYear();
+	haspkeyTime.month=oleDateTime.GetMonth();
+	haspkeyTime.day=oleDateTime.GetDay();
+	haspkeyTime.hour=oleDateTime.GetHour();
+	haspkeyTime.minute=oleDateTime.GetMinute();
+	haspkeyTime.second=oleDateTime.GetSecond();
+}
+
 bool CDlgEncyptMotionFile::saveMotionBufferToFile( char  *filePath,unsigned char *buffer,int bufferSize,char *msg){
 
 		CFile fb; 
@@ -470,4 +513,30 @@ void CDlgEncyptMotionFile::OnBnClickedBtnSetTimeNow()
 	m_ExpireDate=COleDateTime::GetCurrentTime();
 
 	UpdateData(FALSE);
+}
+
+
+void CDlgEncyptMotionFile::OnBnClickedBtnReNewUuid()
+{
+	// TODO: Add your control notification handler code here
+	char msg[32];
+	char uuid[37];
+
+	if(getSysUUID(msg,uuid)==TRUE){
+		
+		UpdateData(TRUE);
+
+		m_SysUUID=uuid;
+
+		UpdateData(FALSE);
+
+		MessageBox("Re new UUID SUCCESS.");
+
+	}else{
+
+		CString temp;
+		temp.Format("Fail to get UUID from PC main board , error =%s",msg);
+
+		MessageBox(temp);
+	}
 }

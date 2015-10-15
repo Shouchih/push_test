@@ -11,9 +11,21 @@
 
 // SentinelHaspUtilityDoc.h : interface of the CSentinelHaspUtilityDoc class
 //
-
-
 #pragma once
+
+#include <vector>
+#include "SentinelHaspApiLib\haspUtil.h"
+using namespace std;
+
+struct ConfigParam {
+	char name[80];                                           //   name of param , relate project and device
+    char UUID[80];
+	struct HaspKeyTime  keyExpireDate;
+	BOOL checkFlag;
+	char LIB_APC_KEY[32];
+	int videoSum;
+	char AES_KEY[16];
+};
 
 
 class CSentinelHaspUtilityDoc : public CDocument
@@ -24,9 +36,15 @@ protected: // create from serialization only
 
 // Attributes
 public:
+	char m_CurrentApDirectory[256];
+	CString m_ConfigFileName;
+	struct ConfigParam m_ConfigParam;
 
 // Operations
 public:
+
+	void loadConfigParam();
+	void saveConfigParam(CString configName,CString fileName);
 
 // Overrides
 public:
@@ -55,4 +73,6 @@ protected:
 	// Helper function that sets search content for a Search Handler
 	void SetSearchContent(const CString& value);
 #endif // SHARED_HANDLERS
+	
+
 };

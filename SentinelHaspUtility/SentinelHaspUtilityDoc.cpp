@@ -20,8 +20,9 @@
 #endif
 
 #include "SentinelHaspUtilityDoc.h"
-
+#include "xmlFileUtil.h"
 #include <propkey.h>
+#include "log.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -40,6 +41,8 @@ END_MESSAGE_MAP()
 CSentinelHaspUtilityDoc::CSentinelHaspUtilityDoc()
 {
 	// TODO: add one-time construction code here
+	GetCurrentDirectory(256,m_CurrentApDirectory);
+	m_ConfigFileName="";
 
 }
 
@@ -53,6 +56,7 @@ BOOL CSentinelHaspUtilityDoc::OnNewDocument()
 		return FALSE;
 
 	// TODO: add reinitialization code here
+	loadConfigParam();
 	// (SDI documents will reuse this document)
 
 	return TRUE;
@@ -142,6 +146,108 @@ void CSentinelHaspUtilityDoc::Dump(CDumpContext& dc) const
 	CDocument::Dump(dc);
 }
 #endif //_DEBUG
+
+
+void CSentinelHaspUtilityDoc::loadConfigParam(){
+
+	CFileDialog fileDlg(TRUE);
+	fileDlg.m_ofn.lpstrFilter=LPCTSTR(_T("XML Files(*.xml)\0*.xml\0"));
+	//定義打開對話框的標題
+	fileDlg.m_ofn.lpstrTitle=LPCTSTR(_T("Browse a Config xml file"));
+
+	fileDlg.m_ofn.lpstrInitialDir = _T(m_CurrentApDirectory);
+
+	bool result=false;
+
+	if (fileDlg.DoModal()==IDOK)
+	{
+		m_ConfigFileName=fileDlg.GetFileName();
+		CString absFilePath=fileDlg.GetPathName();
+
+		result=readXMLConfigParam((LPCTSTR)absFilePath,m_ConfigParam);
+
+		//   將附檔名移除
+		int index=m_ConfigFileName.Find(".xml");
+		if(index>=0){
+			m_ConfigFileName=m_ConfigFileName.Mid(0,index);
+		}
+	}
+
+	fileDlg.DestroyWindow();
+
+	//  initialize   m_ConfigParam
+	if(result==false){
+
+		//------------- UUID -----------------------------
+		char msg[32];
+		char uuid[37];
+
+		if(getSysUUID(msg,uuid)==TRUE){
+			stringCopy((char *)m_ConfigParam.UUID,uuid,sizeof(m_ConfigParam.UUID));
+		}else{
+		    m_ConfigParam.UUID[0]='\0';
+		}
+		//------------- keyExpireDate -----------------------------
+		COleDateTime currentTime =COleDateTime::GetCurrentTime();
+
+		m_ConfigParam.keyExpireDate.year=currentTime.GetYear()+1;
+		m_ConfigParam.keyExpireDate.month=currentTime.GetMonth();
+		m_ConfigParam.keyExpireDate.day=currentTime.GetDay();
+		m_ConfigParam.keyExpireDate.hour=0;
+		m_ConfigParam.keyExpireDate.minute=0;
+		m_ConfigParam.keyExpireDate.second=0;
+
+		// --------------- Others -------------------------------------
+		m_ConfigParam.name[0]='\0';
+		m_ConfigParam.checkFlag=FALSE;
+		m_ConfigParam.LIB_APC_KEY[0]='0';
+		m_ConfigParam.videoSum=0;
+		m_ConfigParam.AES_KEY[0]='0';
+
+	}
+
+	SetTitle(m_ConfigParam.name);
+
+}
+
+
+void CSentinelHaspUtilityDoc::saveConfigParam(CString configName,CString fileName){
+
+	COleDateTime currentTime =COleDateTime::GetCurrentTime();
+
+	if(configName.GetLength()==0){
+
+		configName=m_ConfigParam.name;
+
+		if(configName.GetLength()==0){			
+			configName.Format("Config save at %.4d-%.2d-%.2d",
+				currentTime.GetYear(),
+				currentTime.GetMonth(),
+				currentTime.GetDay());
+		}
+	}
+	stringCopy((char *)m_ConfigParam.name,configName.GetBuffer(),sizeof(m_ConfigParam.name));
+
+
+	if(fileName.GetLength()==0){
+		fileName=m_ConfigFileName;
+
+		if(fileName.GetLength()==0){			
+			fileName.Format("haspConfig-%.4d-%.2d-%.2d",
+				currentTime.GetYear(),
+				currentTime.GetMonth(),
+				currentTime.GetDay());
+		}
+	}
+
+	CString absFilePath;
+	absFilePath.Format("%s\\%s.xml",m_CurrentApDirectory,fileName);
+
+	saveXMLConfigParam( (LPCTSTR)absFilePath,m_ConfigParam);
+
+	SetTitle(m_ConfigParam.name);
+
+}
 
 
 // CSentinelHaspUtilityDoc commands

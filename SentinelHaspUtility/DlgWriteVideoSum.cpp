@@ -5,7 +5,7 @@
 #include "SentinelHaspUtility.h"
 #include "DlgWriteVideoSum.h"
 #include "afxdialogex.h"
-
+#include "DlgSaveConfigParam.h"
 
 // CDlgWriteVideoSum dialog
 
@@ -56,5 +56,44 @@ void CDlgWriteVideoSum::OnBnClickedOk()
 
 	UpdateData(FALSE);
 
+	updateConfigParam();
+
 	CDialogEx::OnOK();
+}
+
+
+BOOL CDlgWriteVideoSum::OnInitDialog()
+{
+	CDialogEx::OnInitDialog();
+
+	// TODO:  Add extra initialization here
+
+	CFrameWnd * pFrame = (CFrameWnd *)(AfxGetApp()->m_pMainWnd);
+	m_pSentinelHaspUtilityDoc=(CSentinelHaspUtilityDoc*)pFrame->GetActiveDocument();
+
+	UpdateData(TRUE);
+
+	m_VideoSum=m_pSentinelHaspUtilityDoc->m_ConfigParam.videoSum;
+
+	UpdateData(FALSE);
+
+	return TRUE;  // return TRUE unless you set the focus to a control
+	// EXCEPTION: OCX Property Pages should return FALSE
+}
+
+
+void CDlgWriteVideoSum::updateConfigParam(){
+
+	UpdateData(TRUE);
+
+	m_pSentinelHaspUtilityDoc->m_ConfigParam.videoSum=m_VideoSum;
+
+	CDlgSaveConfigParam dlgSaveConfigParam;
+
+	if(dlgSaveConfigParam.DoModal()==IDOK){
+		
+	}
+
+	UpdateData(FALSE);
+
 }

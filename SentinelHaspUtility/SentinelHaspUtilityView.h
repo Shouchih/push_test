@@ -57,6 +57,7 @@ protected:
 	afx_msg void OnContextMenu(CWnd* pWnd, CPoint point);
 	DECLARE_MESSAGE_MAP()
 public:
+	CSentinelHaspUtilityDoc *m_pSentinelHaspUtilityDoc;
 	CString m_StatusInfo;
 	void haspLogIn(void);
 	void haspLogOut(void);

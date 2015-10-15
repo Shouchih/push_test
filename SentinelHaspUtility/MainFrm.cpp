@@ -20,6 +20,7 @@
 #include "DlgWriteVideoSum.h"
 #include "DlgEncyptMotionFile.h"
 #include "DlgReadEncryptMotionFile.h"
+#include "DlgSaveConfigParam.h"
 #include "log.h"
 
 #ifdef _DEBUG
@@ -48,11 +49,14 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFrameWndEx)
 	ON_COMMAND(ID_BTN_READ_VIDEO_SUM, &CMainFrame::OnBtnReadVideoSum)
 	ON_COMMAND(ID_BTN_ENCRYPT_MOTION_FILE, &CMainFrame::OnBtnEncryptMotionFile)
 	ON_COMMAND(ID_BTN_CHECK_ENCRYPT_MOTION_FILE, &CMainFrame::OnBtnCheckEncryptMotionFile)
+	ON_COMMAND(ID_BTN_READ_CONFIG, &CMainFrame::OnBtnReadConfig)
+	ON_COMMAND(ID_BTN_SAVE_CONFIG, &CMainFrame::OnBtnSaveConfig)
 END_MESSAGE_MAP()
 
 // CMainFrame construction/destruction
 
 CMainFrame::CMainFrame()
+	:m_pSentinelHaspUtilityDoc(NULL)
 {
 	// TODO: add member initialization code here
 	theApp.m_nAppLook = theApp.GetInt(_T("ApplicationLook"), ID_VIEW_APPLOOK_WINDOWS_7);
@@ -346,4 +350,27 @@ void CMainFrame::OnBtnCheckEncryptMotionFile()
 	if(dlgReadEncryptMotionFile.DoModal()==IDOK){
 		
 	}
+}
+
+
+void CMainFrame::OnBtnReadConfig()
+{
+	// TODO: Add your command handler code here
+	if(!m_pSentinelHaspUtilityDoc){
+		m_pSentinelHaspUtilityDoc=(CSentinelHaspUtilityDoc*)GetActiveDocument();
+	}
+	m_pSentinelHaspUtilityDoc->loadConfigParam();
+}
+
+
+void CMainFrame::OnBtnSaveConfig()
+{
+	// TODO: Add your command handler code here	
+
+	CDlgSaveConfigParam dlgSaveConfigParam;
+
+	if(dlgSaveConfigParam.DoModal()==IDOK){
+		
+	}
+
 }

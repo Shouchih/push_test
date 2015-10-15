@@ -1,6 +1,7 @@
 #pragma once
 
 #include "SentinelHaspApiLib\haspUtil.h"
+#include "SentinelHaspUtilityDoc.h"
 // CDlgWriteVideoSum dialog
 
 class CDlgWriteVideoSum : public CDialogEx
@@ -21,4 +22,8 @@ protected:
 public:
 	int m_VideoSum;
 	afx_msg void OnBnClickedOk();
+
+	CSentinelHaspUtilityDoc *m_pSentinelHaspUtilityDoc;
+	void updateConfigParam();
+	virtual BOOL OnInitDialog();
 };

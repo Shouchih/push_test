@@ -27,7 +27,7 @@
 #endif
 
 #include "SentinelHaspApiLib\haspUtil.h"
-
+#include "DlgSaveConfigParam.h"
 
 
 // CSentinelHaspUtilityView
@@ -268,8 +268,24 @@ void CSentinelHaspUtilityView::writeHaspKeyCheckFlag(BOOL checkFlag){
 
 	hasp_key_write_check_flag(msg,checkFlag);
 
-	temp.Format("Write Check Flag to USB , result = %s",msg);
-	showMsgToStatusInfo(temp);
+	if(checkFlag==TRUE){
+		temp.Format("Write Check =TRUE   to USB , result = %s",msg);
+	}else{
+		temp.Format("Write Check =FALSE   to USB , result = %s",msg);
+	}
+	MessageBox(temp);
+
+   // -----------  BackUp Config Param-------------------------------------------------
+	if(!m_pSentinelHaspUtilityDoc){
+		m_pSentinelHaspUtilityDoc=(CSentinelHaspUtilityDoc*)GetDocument(); 
+	}
+	m_pSentinelHaspUtilityDoc->m_ConfigParam.checkFlag=checkFlag;
+
+	CDlgSaveConfigParam dlgSaveConfigParam;
+
+	if(dlgSaveConfigParam.DoModal()==IDOK){
+		
+	}
 
 }
 

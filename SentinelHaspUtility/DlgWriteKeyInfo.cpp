@@ -5,7 +5,7 @@
 #include "SentinelHaspUtility.h"
 #include "DlgWriteKeyInfo.h"
 #include "afxdialogex.h"
-
+#include "DlgSaveConfigParam.h"
 
 // CDlgWriteKeyInfo dialog
 
@@ -42,6 +42,7 @@ void CDlgWriteKeyInfo::DoDataExchange(CDataExchange* pDX)
 BEGIN_MESSAGE_MAP(CDlgWriteKeyInfo, CDialogEx)
 	ON_BN_CLICKED(IDOK, &CDlgWriteKeyInfo::OnBnClickedOk)
 	ON_BN_CLICKED(IDC_BTN_SET_TIME_NOW, &CDlgWriteKeyInfo::OnBnClickedBtnSetTimeNow)
+	ON_BN_CLICKED(IDC_BTN_RE_NEW_UUID, &CDlgWriteKeyInfo::OnBnClickedBtnReNewUuid)
 END_MESSAGE_MAP()
 
 
@@ -53,20 +54,22 @@ BOOL CDlgWriteKeyInfo::OnInitDialog()
 	CDialogEx::OnInitDialog();
 
 	// TODO:  Add extra initialization here
-	UpdateData(TRUE);
-	char msg[32];
-	char uuid[37];
+	CFrameWnd * pFrame = (CFrameWnd *)(AfxGetApp()->m_pMainWnd);
+	m_pSentinelHaspUtilityDoc=(CSentinelHaspUtilityDoc*)pFrame->GetActiveDocument();
 
-	if(getSysUUID(msg,uuid)==TRUE){
-		m_UUID=uuid;
-	}else{
-		m_UUID=msg;
-	}
+	UpdateData(TRUE);
+
+	m_UUID=m_pSentinelHaspUtilityDoc->m_ConfigParam.UUID;
 
 	m_ExpireDate.SetDate(
-		m_ExpireDate.GetYear()+1,
-		m_ExpireDate.GetMonth(),
-		m_ExpireDate.GetDay());
+		m_pSentinelHaspUtilityDoc->m_ConfigParam.keyExpireDate.year,
+		m_pSentinelHaspUtilityDoc->m_ConfigParam.keyExpireDate.month,
+		m_pSentinelHaspUtilityDoc->m_ConfigParam.keyExpireDate.day);
+
+	m_CheckOK=m_pSentinelHaspUtilityDoc->m_ConfigParam.checkFlag;
+	m_lib_apc_key=m_pSentinelHaspUtilityDoc->m_ConfigParam.LIB_APC_KEY;
+	m_AESKey=m_pSentinelHaspUtilityDoc->m_ConfigParam.AES_KEY;
+	m_VideoSum=m_pSentinelHaspUtilityDoc->m_ConfigParam.videoSum;
 
 	UpdateData(FALSE);
 
@@ -110,9 +113,51 @@ void CDlgWriteKeyInfo::OnBnClickedOk()
 
 	UpdateData(FALSE);
 
+	updateConfigParam();
+
 	wait.Restore();
 
 	CDialogEx::OnOK();
+}
+
+void CDlgWriteKeyInfo::updateConfigParam(){
+
+	UpdateData(TRUE);
+
+	HaspKeyTime expireDate;
+	transferOleDateToHaspKeyTime (m_ExpireDate ,expireDate);
+
+	expireDate.hour=23;
+	expireDate.minute=59;
+	expireDate.second=59;
+    
+	stringCopy((char *)m_pSentinelHaspUtilityDoc->m_ConfigParam.UUID,
+	                      m_UUID.GetBuffer(),
+						  sizeof(m_pSentinelHaspUtilityDoc->m_ConfigParam.UUID));
+
+	m_pSentinelHaspUtilityDoc->m_ConfigParam.keyExpireDate=expireDate;
+
+	stringCopy((char *)m_pSentinelHaspUtilityDoc->m_ConfigParam.LIB_APC_KEY,
+	                      m_lib_apc_key.GetBuffer(),
+						  sizeof(m_pSentinelHaspUtilityDoc->m_ConfigParam.LIB_APC_KEY));
+
+	stringCopy((char *)m_pSentinelHaspUtilityDoc->m_ConfigParam.AES_KEY,
+	                      m_AESKey.GetBuffer(),
+						  sizeof(m_pSentinelHaspUtilityDoc->m_ConfigParam.AES_KEY));
+
+	m_pSentinelHaspUtilityDoc->m_ConfigParam.checkFlag=m_CheckOK;
+
+	m_pSentinelHaspUtilityDoc->m_ConfigParam.videoSum=m_VideoSum;
+
+	
+	CDlgSaveConfigParam dlgSaveConfigParam;
+
+	if(dlgSaveConfigParam.DoModal()==IDOK){
+		
+	}
+
+	UpdateData(FALSE);
+
 }
 
 void CDlgWriteKeyInfo::transferOleDateToHaspKeyTime (COleDateTime oleDateTime ,HaspKeyTime & haspkeyTime){
@@ -133,4 +178,31 @@ void CDlgWriteKeyInfo::OnBnClickedBtnSetTimeNow()
 	m_ExpireDate=COleDateTime::GetCurrentTime();
 
 	UpdateData(FALSE);
+}
+
+
+void CDlgWriteKeyInfo::OnBnClickedBtnReNewUuid()
+{
+	// TODO: Add your control notification handler code here
+	char msg[32];
+	char uuid[37];
+
+	if(getSysUUID(msg,uuid)==TRUE){
+		
+		UpdateData(TRUE);
+
+		m_UUID=uuid;
+
+		UpdateData(FALSE);
+
+		MessageBox("Re new UUID SUCCESS.");
+
+	}else{
+
+		CString temp;
+		temp.Format("Fail to get UUID from PC main board , error =%s",msg);
+
+		MessageBox(temp);
+	}
+
 }

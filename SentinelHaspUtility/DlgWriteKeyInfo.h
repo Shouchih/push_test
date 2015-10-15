@@ -1,6 +1,7 @@
 #pragma once
 #include "atlcomtime.h"
 #include "SentinelHaspApiLib\haspUtil.h"
+#include "SentinelHaspUtilityDoc.h"
 
 // CDlgWriteKeyInfo dialog
 
@@ -31,4 +32,8 @@ public:
 	int m_VideoSum;
 	CString m_AESKey;
 	afx_msg void OnBnClickedBtnSetTimeNow();
+
+	CSentinelHaspUtilityDoc *m_pSentinelHaspUtilityDoc;
+	void updateConfigParam();
+	afx_msg void OnBnClickedBtnReNewUuid();
 };

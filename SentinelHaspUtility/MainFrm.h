@@ -12,6 +12,8 @@
 // MainFrm.h : interface of the CMainFrame class
 //
 
+#include "SentinelHaspUtilityDoc.h"
+
 #pragma once
 class CSentinelHaspUtilityView;
 
@@ -24,6 +26,7 @@ protected: // create from serialization only
 
 // Attributes
 public:
+	CSentinelHaspUtilityDoc *m_pSentinelHaspUtilityDoc;
 
 // Operations
 public:
@@ -71,6 +74,8 @@ public:
 	afx_msg void OnBtnReadVideoSum();
 	afx_msg void OnBtnEncryptMotionFile();
 	afx_msg void OnBtnCheckEncryptMotionFile();
+	afx_msg void OnBtnReadConfig();
+	afx_msg void OnBtnSaveConfig();
 };
 
 
