@@ -27,14 +27,14 @@ struct HaspKeyTime  {
 };
 
 struct HaspKeyData  {
-	char magic[10];                   //  @Brogent00 
+	char magic[12];                   //  @Brogent00 
     char UUID[80];
 	struct HaspKeyTime  expireDate;
 	BOOL checkFlag;
-	char LIB_APC_KEY[32];
+	char LIB_APC_KEY[64];
 	int videoSum;
-	char AES_KEY[16];
-	unsigned char reserve[792];
+	char AES_KEY[32];
+	unsigned char reserve[744];
 };
 
 static unsigned char vendor_code[] =
