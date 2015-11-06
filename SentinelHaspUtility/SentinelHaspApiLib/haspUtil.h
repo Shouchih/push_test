@@ -34,7 +34,7 @@ struct HaspKeyData  {
 	char LIB_APC_KEY[64];
 	int videoSum;
 	char AES_KEY[32];
-	unsigned char reserve[744];
+	unsigned char reserve[742];
 };
 
 static unsigned char vendor_code[] =
